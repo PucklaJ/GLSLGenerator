@@ -5,7 +5,7 @@ import (
 )
 
 func (this *Variable) String() string {
-	return this.Type + " " + this.Precision + " " + this.Name + ";"
+	return this.Type + " " + this.Name + ";"
 }
 
 func (this *Variable) UniformString() string {
@@ -40,6 +40,15 @@ func (this *Makro) String() string {
 	return "#define " + this.Name + " " + this.Value
 }
 
+func (this *Struct) String() (str string) {
+	str += "struct " + this.Name + "\n{"
+	for _, v := range this.Variables {
+		str += v.String() + "\n"
+	}
+	str += "};"
+	return
+}
+
 func (this *Function) String() string {
 	return this.Prototype + "\n{\n" + this.Body + "\n}\n"
 }
@@ -70,6 +79,9 @@ func (this *Module) FunstionsString() (str string) {
 }
 
 func (this *Module) PrototypeString(index uint8) string {
+	if this.Body == "" {
+		return ""
+	}
 	if this.Name != "" {
 		return "void " + this.Name + "();"
 	} else {
@@ -78,6 +90,9 @@ func (this *Module) PrototypeString(index uint8) string {
 }
 
 func (this *Module) CallString(index uint8) string {
+	if this.Body == "" {
+		return ""
+	}
 	var name string
 	if this.Name != "" {
 		name = this.Name
@@ -88,6 +103,9 @@ func (this *Module) CallString(index uint8) string {
 }
 
 func (this *Module) String(index uint8) string {
+	if this.Body == "" {
+		return ""
+	}
 	ps := this.PrototypeString(index)
 	ps = ps[:len(ps)-1]
 
@@ -128,6 +146,18 @@ func (this *VertexGenerator) String() (str string) {
 	if len(this.Outputs) != 0 {
 		str += "\n"
 	}
+
+	var hasStructs = false
+	for _, m := range this.Modules {
+		for _, s := range m.Structs {
+			hasStructs = true
+			str += s.String() + "\n"
+		}
+	}
+	if hasStructs {
+		str += "\n"
+	}
+
 	var hasUniforms = false
 	for _, m := range this.Modules {
 		for _, u := range m.Uniforms {
@@ -211,6 +241,18 @@ func (this *FragmentGenerator) String() (str string) {
 	if len(this.Outputs) != 0 {
 		str += "\n"
 	}
+
+	var hasStructs = false
+	for _, m := range this.Modules {
+		for _, s := range m.Structs {
+			hasStructs = true
+			str += s.String() + "\n"
+		}
+	}
+	if hasStructs {
+		str += "\n"
+	}
+
 	var hasUniforms = false
 	for _, m := range this.Modules {
 		for _, u := range m.Uniforms {
@@ -223,7 +265,7 @@ func (this *FragmentGenerator) String() (str string) {
 	}
 
 	for _, g := range this.Globals {
-		str += g.String()
+		str += g.String() + "\n"
 	}
 	if len(this.Globals) != 0 {
 		str += "\n"

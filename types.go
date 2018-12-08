@@ -11,12 +11,18 @@ type Makro struct {
 	Value string
 }
 
+type Struct struct {
+	Name      string
+	Variables []Variable
+}
+
 type Function struct {
 	Prototype string
 	Body      string
 }
 
 type Module struct {
+	Structs   []Struct
 	Uniforms  []Variable
 	Functions []Function
 	Name      string

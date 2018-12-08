@@ -20,6 +20,7 @@ func main() {
 		},
 	).AddModule(
 		glslgen.Module{
+			[]glslgen.Struct{},
 			[]glslgen.Variable{
 				glslgen.Variable{"mat4", "highp", "transformMatrix3D"},
 				glslgen.Variable{"mat4", "highp", "viewMatrix3D"},
@@ -40,6 +41,7 @@ func main() {
 		"110",
 	).AddModule(
 		glslgen.Module{
+			[]glslgen.Struct{},
 			[]glslgen.Variable{},
 			[]glslgen.Function{},
 			"passthrough",
