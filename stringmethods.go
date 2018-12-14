@@ -5,7 +5,11 @@ import (
 )
 
 func (this *Variable) String() string {
-	return this.Type + " " + this.Name + ";"
+	var p = ""
+	if isES {
+		p = this.Precision + " "
+	}
+	return p + this.Type + " " + this.Name + ";"
 }
 
 func (this *Variable) UniformString() string {
@@ -13,7 +17,7 @@ func (this *Variable) UniformString() string {
 }
 
 func (this *Variable) AttributeString(index, version uint16) string {
-	if version < 300 {
+	if version < 150 {
 		return "attribute " + this.String()
 	} else {
 		return "in " + this.String()
@@ -21,7 +25,7 @@ func (this *Variable) AttributeString(index, version uint16) string {
 }
 
 func (this *Variable) OutputString(version uint16) string {
-	if version < 300 {
+	if version < 150 {
 		return "varying " + this.String()
 	} else {
 		return "out " + this.String()
@@ -29,7 +33,7 @@ func (this *Variable) OutputString(version uint16) string {
 }
 
 func (this *Variable) InputString(version uint16) string {
-	if version < 300 {
+	if version < 150 {
 		return "varying " + this.String()
 	} else {
 		return "in " + this.String()
@@ -119,12 +123,13 @@ func (this *Generator) String() string {
 func (this *VertexGenerator) String() (str string) {
 	var temp uint64
 	var versioni uint16
-	if this.Version[3:] == "es" {
-		temp = 110
+	if this.Version == "100" || this.Version[3:] == "es" {
+		temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
+		isES = true
 	} else {
 		temp, _ = strconv.ParseUint(this.Version, 10, 16)
-		versioni = uint16(temp)
 	}
+	versioni = uint16(temp)
 
 	str += "#version " + this.Version + "\n\n"
 

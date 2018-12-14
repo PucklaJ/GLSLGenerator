@@ -46,3 +46,5 @@ type FragmentGenerator struct {
 	Generator
 	Inputs []Variable
 }
+
+var isES = false
