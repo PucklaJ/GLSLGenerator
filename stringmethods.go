@@ -120,6 +120,14 @@ func (this *Generator) String() string {
 	return ""
 }
 
+func printPrecisions() (str string) {
+	str += "\n"
+	str += "precision highp float;\n"
+	str += "precision highp sampler2D;\n"
+	str += "\n"
+	return
+}
+
 func (this *VertexGenerator) String() (str string) {
 	var temp uint64
 	var versioni uint16
@@ -138,6 +146,10 @@ func (this *VertexGenerator) String() (str string) {
 	}
 	if len(this.Makros) != 0 {
 		str += "\n"
+	}
+
+	if isES {
+		str += printPrecisions()
 	}
 
 	for i, a := range this.Attributes {
@@ -231,6 +243,10 @@ func (this *FragmentGenerator) String() (str string) {
 	}
 	if len(this.Makros) != 0 {
 		str += "\n"
+	}
+
+	if isES {
+		str += printPrecisions()
 	}
 
 	for _, i := range this.Inputs {
