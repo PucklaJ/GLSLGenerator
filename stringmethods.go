@@ -2,41 +2,48 @@ package glslgen
 
 import (
 	"strconv"
+	"strings"
 )
 
-func (this *Variable) String() string {
+func (this *Variable) String(version uint16) string {
 	var p = ""
 	if isES {
 		p = this.Precision + " "
 	}
-	return p + this.Type + " " + this.Name + ";"
+	tiep := this.Type
+	if tiep == "sampler2DMS" {
+		if isES && version < 320 {
+			tiep = "sampler2D"
+		}
+	}
+	return p + tiep + " " + this.Name + ";"
 }
 
-func (this *Variable) UniformString() string {
-	return "uniform " + this.String()
+func (this *Variable) UniformString(version uint16) string {
+	return "uniform " + this.String(version)
 }
 
 func (this *Variable) AttributeString(index, version uint16) string {
-	if version < 150 {
-		return "attribute " + this.String()
+	if version < 150 || (isES && version < 300) {
+		return "attribute " + this.String(version)
 	} else {
-		return "in " + this.String()
+		return "in " + this.String(version)
 	}
 }
 
 func (this *Variable) OutputString(version uint16) string {
-	if version < 150 {
-		return "varying " + this.String()
+	if version < 150 || (isES && version < 300) {
+		return "varying " + this.String(version)
 	} else {
-		return "out " + this.String()
+		return "out " + this.String(version)
 	}
 }
 
 func (this *Variable) InputString(version uint16) string {
-	if version < 150 {
-		return "varying " + this.String()
+	if version < 150 || (isES && version < 300) {
+		return "varying " + this.String(version)
 	} else {
-		return "in " + this.String()
+		return "in " + this.String(version)
 	}
 }
 
@@ -44,10 +51,10 @@ func (this *Makro) String() string {
 	return "#define " + this.Name + " " + this.Value
 }
 
-func (this *Struct) String() (str string) {
+func (this *Struct) String(version uint16) (str string) {
 	str += "struct " + this.Name + "\n{"
 	for _, v := range this.Variables {
-		str += v.String() + "\n"
+		str += v.String(version) + "\n"
 	}
 	str += "};"
 	return
@@ -61,9 +68,9 @@ func (this *Function) PrototypeString() string {
 	return this.Prototype + ";"
 }
 
-func (this *Module) UniformsString() (str string) {
+func (this *Module) UniformsString(version uint16) (str string) {
 	for _, u := range this.Uniforms {
-		str += u.UniformString() + "\n"
+		str += u.UniformString(version) + "\n"
 	}
 	return
 }
@@ -131,7 +138,7 @@ func printPrecisions() (str string) {
 func (this *VertexGenerator) String() (str string) {
 	var temp uint64
 	var versioni uint16
-	if this.Version == "100" || this.Version[3:] == "es" {
+	if this.Version == "100" || this.Version[4:] == "es" {
 		temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
 		isES = true
 	} else {
@@ -168,7 +175,7 @@ func (this *VertexGenerator) String() (str string) {
 	for _, m := range this.Modules {
 		for _, s := range m.Structs {
 			hasStructs = true
-			str += s.String() + "\n"
+			str += s.String(versioni) + "\n"
 		}
 	}
 	if hasStructs {
@@ -179,7 +186,7 @@ func (this *VertexGenerator) String() (str string) {
 	for _, m := range this.Modules {
 		for _, u := range m.Uniforms {
 			hasUniforms = true
-			str += u.UniformString() + "\n"
+			str += u.UniformString(versioni) + "\n"
 		}
 	}
 	if hasUniforms {
@@ -187,7 +194,7 @@ func (this *VertexGenerator) String() (str string) {
 	}
 
 	for _, g := range this.Globals {
-		str += g.String()
+		str += g.String(versioni)
 	}
 	if len(this.Globals) != 0 {
 		str += "\n"
@@ -233,8 +240,20 @@ func (this *VertexGenerator) String() (str string) {
 }
 
 func (this *FragmentGenerator) String() (str string) {
-	temp, _ := strconv.ParseUint(this.Version, 10, 16)
-	versioni := uint16(temp)
+
+	var temp uint64
+	var versioni uint16
+	if this.Version == "100" || this.Version[4:] == "es" {
+		temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
+		isES = true
+	} else {
+		temp, _ = strconv.ParseUint(this.Version, 10, 16)
+	}
+	versioni = uint16(temp)
+
+	if isES && versioni >= 300 {
+		this.AddOutput(Variable{"vec4", "highp", "glFragColor"})
+	}
 
 	str += "#version " + this.Version + "\n\n"
 
@@ -267,7 +286,7 @@ func (this *FragmentGenerator) String() (str string) {
 	for _, m := range this.Modules {
 		for _, s := range m.Structs {
 			hasStructs = true
-			str += s.String() + "\n"
+			str += s.String(versioni) + "\n"
 		}
 	}
 	if hasStructs {
@@ -278,7 +297,7 @@ func (this *FragmentGenerator) String() (str string) {
 	for _, m := range this.Modules {
 		for _, u := range m.Uniforms {
 			hasUniforms = true
-			str += u.UniformString() + "\n"
+			str += u.UniformString(versioni) + "\n"
 		}
 	}
 	if hasUniforms {
@@ -286,7 +305,7 @@ func (this *FragmentGenerator) String() (str string) {
 	}
 
 	for _, g := range this.Globals {
-		str += g.String() + "\n"
+		str += g.String(versioni) + "\n"
 	}
 	if len(this.Globals) != 0 {
 		str += "\n"
@@ -326,6 +345,10 @@ func (this *FragmentGenerator) String() (str string) {
 	}
 	if hasFunctions {
 		str += "\n"
+	}
+
+	if isES && versioni >= 300 {
+		str = strings.Replace(str, "gl_FragColor", "glFragColor", -1)
 	}
 
 	return
