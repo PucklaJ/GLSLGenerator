@@ -138,7 +138,7 @@ func printPrecisions() (str string) {
 func (this *VertexGenerator) String() (str string) {
 	var temp uint64
 	var versioni uint16
-	if this.Version == "100" || this.Version[4:] == "es" {
+	if this.Version == "100" || (len(this.Version) == 6 && this.Version[4:] == "es") {
 		temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
 		isES = true
 	} else {
@@ -243,7 +243,7 @@ func (this *FragmentGenerator) String() (str string) {
 
 	var temp uint64
 	var versioni uint16
-	if this.Version == "100" || this.Version[4:] == "es" {
+	if this.Version == "100" || (len(this.Version) == 6 && this.Version[4:] == "es") {
 		temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
 		isES = true
 	} else {
