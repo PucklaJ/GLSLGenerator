@@ -48,3 +48,4 @@ type FragmentGenerator struct {
 }
 
 var isES = false
+var isWebGL = false

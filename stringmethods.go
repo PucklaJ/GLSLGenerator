@@ -138,15 +138,23 @@ func printPrecisions() (str string) {
 func (this *VertexGenerator) String() (str string) {
 	var temp uint64
 	var versioni uint16
-	if this.Version == "100" || (len(this.Version) == 6 && this.Version[4:] == "es") {
-		temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
+	if this.Version == "WebGL" {
 		isES = true
+		isWebGL = true
 	} else {
-		temp, _ = strconv.ParseUint(this.Version, 10, 16)
+		if this.Version == "100" || (len(this.Version) == 6 && this.Version[4:] == "es") {
+			temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
+			isES = true
+		} else {
+			temp, _ = strconv.ParseUint(this.Version, 10, 16)
+		}
+		versioni = uint16(temp)
 	}
 	versioni = uint16(temp)
 
-	str += "#version " + this.Version + "\n\n"
+	if !isWebGL {
+		str += "#version " + this.Version + "\n\n"
+	}
 
 	for _, m := range this.Makros {
 		str += m.String() + "\n"
@@ -243,19 +251,26 @@ func (this *FragmentGenerator) String() (str string) {
 
 	var temp uint64
 	var versioni uint16
-	if this.Version == "100" || (len(this.Version) == 6 && this.Version[4:] == "es") {
-		temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
+	if this.Version == "WebGL" {
 		isES = true
+		isWebGL = true
 	} else {
-		temp, _ = strconv.ParseUint(this.Version, 10, 16)
+		if this.Version == "100" || (len(this.Version) == 6 && this.Version[4:] == "es") {
+			temp, _ = strconv.ParseUint(this.Version[:3], 10, 16)
+			isES = true
+		} else {
+			temp, _ = strconv.ParseUint(this.Version, 10, 16)
+		}
+		versioni = uint16(temp)
 	}
-	versioni = uint16(temp)
 
 	if isES && versioni >= 300 {
 		this.AddOutput(Variable{"vec4", "highp", "glFragColor"})
 	}
 
-	str += "#version " + this.Version + "\n\n"
+	if !isWebGL {
+		str += "#version " + this.Version + "\n\n"
+	}
 
 	for _, m := range this.Makros {
 		str += m.String() + "\n"
